@@ -27,18 +27,22 @@
 ;; ----------- Day 2.1 -----------
 
 (defn day2_add
+  "Extracts repeated additions from other code"
   [int1 int2]
   (+ int1 int2))
 
 (defn day2_multiply
+  "Extracts repeated multiplications from other code"
   [int1 int2]
   (* int1 int2))
 
 (defn day2_prep
+  "Performs the preparation task of replacing the 'noun' and 'verb' per the 2.2 description (aka index 1 and index 2) with new values"
   [no_alarm noun verb]
   (assoc (assoc no_alarm 1 noun) 2 verb))
 
 (defn day2_1
+  "Checks the opcode and performs the appropriate replacements of items based on the primary rules. Opcode = index 0; Noun = index 1; Verb = index 2; Insert_at = index 3"
   [intcode]
   (loop [posa 0
          posb 1 
@@ -63,7 +67,7 @@
              (+ posc 4)
              (+ posd 4)
              (assoc intcode (get intcode posd) (day2_multiply (get intcode (get intcode posb)) (get intcode (get intcode posc))))
-              )
+             )
             (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4) intcode
                    )))))))
 
