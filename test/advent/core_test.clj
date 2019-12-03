@@ -16,6 +16,12 @@
 
 (deftest day2_1_alarm_prep_test
   (testing "Day 2.1 alarm prep"
-    (is (= (day2_prep [1,0,0,0,99]) [1 12 2 0 99]))
-    (is (= (day2_prep [1,1,1,4,99,5,6,0,99]) [1,12,2,4,99,5,6,0,99]))
+    (is (= (day2_prep [1,0,0,0,99] 12 2) [1 12 2 0 99]))
+    (is (= (day2_prep [1,1,1,4,99,5,6,0,99] 12 2) [1,12,2,4,99,5,6,0,99]))
+    ))
+
+(deftest day2_2_test
+  (testing "Day 2.1 noun and verb finder"
+    (is (= (day2_2_nounverb [1 5 6 0 99 19690719 1]) [0 5]))
+    (is (= (day2_2_result (day2_2_nounverb [1 5 6 0 99 19690719 1])) 5))
     ))
