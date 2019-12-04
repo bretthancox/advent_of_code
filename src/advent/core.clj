@@ -1,6 +1,7 @@
 (ns advent.core
   (:gen-class)
-  (:require [advent.inputs :refer [day1_masses day2_intcode]]))
+  (:require [clojure.string :as str]
+            [advent.inputs :refer [day1_masses day2_intcode]]))
 
 ;; ----------- Day 1 -----------
 
@@ -58,7 +59,10 @@
            (+ posb 4)
            (+ posc 4)
            (+ posd 4)
-           (assoc intcode (get intcode posd) (day2_add (get intcode (get intcode posb)) (get intcode (get intcode posc))))
+           ;; This horrible line does the following: 
+             ;; for index 1 and 2, get the value at index 1 and 2, then use those values as indices to get the values for calculation
+             ;; then, get the target_index value at index 3, take the calculation result, and write the calculation result to the target_index
+           (assoc intcode (get intcode posd) (day2_add (get intcode (get intcode posb)) (get intcode (get intcode posc)))) 
            )
           (if (= opcode 2)
             (recur
@@ -80,9 +84,9 @@
   (let [number_of_items (count intcode)]
     (println number_of_items)
     (loop [noun 0 verb 0]
-      (println "Noun:" noun "Verb:" verb)
+      ;(println "Noun:" noun "Verb:" verb)
       (let [result (day2_1 (day2_prep intcode noun verb))]
-        (println result 0)
+        ;(println result 0)
         (if (= (get result 0) 19690720)
           [(get result 1) (get result 2)]
           (recur 
@@ -97,6 +101,66 @@
   (+ (* 100 (get nounverb 0)) (get nounverb 1)))
 
 
+
+;; ----------- Day 2.2 -----------
+
+(defn day3_1_coordinate_builder
+  [strings]
+  (loop [next_str (first strings)
+         rest_strings (rest strings)
+         coordinates [0 0] 
+         vec_of_coords [coordinates]] 
+    (if (= (+ 1 (count strings)) (count vec_of_coords))
+      vec_of_coords
+      (if ;;This is the positive Y axis move
+       (str/starts-with? next_str "U")
+        (recur
+         (first rest_strings) 
+         (rest rest_strings)
+         (vector (get coordinates 0) ;; X
+                 (+ (get coordinates 1)  ;; Y
+                    (Integer/parseInt (subs next_str 1))))
+         (conj vec_of_coords (vector (get coordinates 0) 
+                                     (+ (get coordinates 1) 
+                                        (Integer/parseInt (subs next_str 1))))))
+        (if ;;This is the negative Y axis move
+         (str/starts-with? next_str "D")
+          (recur
+           (first rest_strings)
+           (rest rest_strings)
+           (vector (get coordinates 0)
+                   (- (get coordinates 1)
+                      (Integer/parseInt (subs next_str 1))))
+           (conj vec_of_coords
+                 (vector (get coordinates 0)                                          
+                         (- (get coordinates 1)
+                            (Integer/parseInt (subs next_str 1))))))
+          (if ;;This is the positive X axis move
+           (str/starts-with? next_str "R")
+            (recur
+             (first rest_strings)
+             (rest rest_strings)
+             (vector (+ (get coordinates 0)
+                        (Integer/parseInt (subs next_str 1)))
+                     (get coordinates 1))
+             (conj vec_of_coords
+                   (vector (+ (get coordinates 0)
+                              (Integer/parseInt (subs next_str 1)))
+                           (get coordinates 1))))
+            (if ;;This is the negative X axis move
+             (str/starts-with? next_str "L")
+              (recur
+               (first rest_strings)
+               (rest rest_strings)
+               (vector (- (get coordinates 0)
+                          (Integer/parseInt (subs next_str 1)))
+                       (get coordinates 1))
+               (conj vec_of_coords
+                     (vector (- (get coordinates 0)
+                                (Integer/parseInt (subs next_str 1)))
+                             (get coordinates 1)))))))))))
+
+
 (defn -main
   "I call the functions for the Advent of Code"
   []
@@ -104,4 +168,7 @@
   (println "Day 1.2 - Fuel for the fuel:" (reduce + (map day1_2 day1_masses)))
   (println "Day 2.1 - Intcode output: " (day2_1 (day2_prep day2_intcode 12 2)))
   (println "Day 2.2 - Noun/verb:" (day2_2_result (day2_2_nounverb day2_intcode)))
+  ;(println (map #(if (str/starts-with? % "R") % nil) ["R8","U5","L5","D3"]))
+  ;(println (map day3_1_coordinate_changes ["R8","U5","L5","D3"]))
+  (println (day3_1_coordinate_builder ["R8","U5","L5","D3"]))
   )

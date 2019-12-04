@@ -25,3 +25,10 @@
     (is (= (day2_2_nounverb [1 5 6 0 99 19690719 1]) [0 5]))
     (is (= (day2_2_result (day2_2_nounverb [1 5 6 0 99 19690719 1])) 5))
     ))
+
+(deftest day3_1_coord_builder
+  (testing "Day 3.1 Building coordinates"
+    (is (= (day3_1_coordinate_builder ["R8","U5","L5","D3"]) [[0 0] [8 0] [8 5] [3 5] [3 2]]))
+    (is (= (day3_1_coordinate_builder ["U7","R6","D4","L4"]) [[0 0] [0 7] [6 7] [6 3] [2 3]]))
+    (is (= (day3_1_coordinate_builder ["U7","R6","D4","L4","L5","D4"]) [[0 0] [0 7] [6 7] [6 3] [2 3] [-3 3] [-3 -1]]))
+    ))
