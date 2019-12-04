@@ -102,7 +102,19 @@
 
 
 
-;; ----------- Day 2.2 -----------
+;; ----------- Day 3.1 -----------
+
+(defn day3_1_coordinate_vec_builder_x
+  [operator coordinates next_str]
+  (vector (operator (get coordinates 0)
+             (Integer/parseInt (subs next_str 1)))
+          (get coordinates 1)))
+
+(defn day3_1_coordinate_vec_builder_y
+  [operator coordinates next_str]
+  (vector (get coordinates 0) ;; X
+          (operator (get coordinates 1)  ;; Y
+             (Integer/parseInt (subs next_str 1)))))
 
 (defn day3_1_coordinate_builder
   [strings]
@@ -110,55 +122,34 @@
          rest_strings (rest strings)
          coordinates [0 0] 
          vec_of_coords [coordinates]] 
-    (if (= (+ 1 (count strings)) (count vec_of_coords))
+    (if (= 
+         (+ 1 (count strings)) 
+         (count vec_of_coords))
       vec_of_coords
-      (if ;;This is the positive Y axis move
-       (str/starts-with? next_str "U")
+      (if (str/starts-with? next_str "U")
         (recur
          (first rest_strings) 
          (rest rest_strings)
-         (vector (get coordinates 0) ;; X
-                 (+ (get coordinates 1)  ;; Y
-                    (Integer/parseInt (subs next_str 1))))
-         (conj vec_of_coords (vector (get coordinates 0) 
-                                     (+ (get coordinates 1) 
-                                        (Integer/parseInt (subs next_str 1))))))
-        (if ;;This is the negative Y axis move
-         (str/starts-with? next_str "D")
+         (day3_1_coordinate_vec_builder_y + coordinates next_str)
+         (conj vec_of_coords (day3_1_coordinate_vec_builder_y + coordinates next_str)))
+        (if (str/starts-with? next_str "D")
           (recur
            (first rest_strings)
            (rest rest_strings)
-           (vector (get coordinates 0)
-                   (- (get coordinates 1)
-                      (Integer/parseInt (subs next_str 1))))
-           (conj vec_of_coords
-                 (vector (get coordinates 0)                                          
-                         (- (get coordinates 1)
-                            (Integer/parseInt (subs next_str 1))))))
-          (if ;;This is the positive X axis move
-           (str/starts-with? next_str "R")
+           (day3_1_coordinate_vec_builder_y - coordinates next_str)
+           (conj vec_of_coords (day3_1_coordinate_vec_builder_y - coordinates next_str)))
+          (if (str/starts-with? next_str "R")
             (recur
              (first rest_strings)
              (rest rest_strings)
-             (vector (+ (get coordinates 0)
-                        (Integer/parseInt (subs next_str 1)))
-                     (get coordinates 1))
-             (conj vec_of_coords
-                   (vector (+ (get coordinates 0)
-                              (Integer/parseInt (subs next_str 1)))
-                           (get coordinates 1))))
-            (if ;;This is the negative X axis move
-             (str/starts-with? next_str "L")
+             (day3_1_coordinate_vec_builder_x + coordinates next_str)
+             (conj vec_of_coords (day3_1_coordinate_vec_builder_x + coordinates next_str)))
+            (if (str/starts-with? next_str "L")
               (recur
                (first rest_strings)
-               (rest rest_strings)
-               (vector (- (get coordinates 0)
-                          (Integer/parseInt (subs next_str 1)))
-                       (get coordinates 1))
-               (conj vec_of_coords
-                     (vector (- (get coordinates 0)
-                                (Integer/parseInt (subs next_str 1)))
-                             (get coordinates 1)))))))))))
+               (rest rest_strings) 
+               (day3_1_coordinate_vec_builder_x - coordinates next_str)
+               (conj vec_of_coords (day3_1_coordinate_vec_builder_x - coordinates next_str))))))))))
 
 
 (defn -main
