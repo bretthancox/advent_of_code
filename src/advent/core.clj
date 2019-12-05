@@ -1,7 +1,7 @@
 (ns advent.core
   (:gen-class)
   (:require [clojure.string :as str]
-            [advent.inputs :refer [day1_masses day2_intcode]]))
+            [advent.inputs :refer [day1_masses day2_intcode day3_line1 day3_line2]]))
 
 ;; ----------- Day 1 -----------
 
@@ -229,12 +229,16 @@
 (defn day3_1_manhattan_distance
   [intersection_points]
   (loop [intersection_points intersection_points
-         smallest_distance (reduce + (first intersection_points))]
+         intersect (first intersection_points)
+         smallest_distance (+ (Math/abs (- 0 (first intersect))) (Math/abs (- 0 (second intersect))))]
     (if (empty? intersection_points)
       smallest_distance
-      (recur (rest intersection_points) (if (< smallest_distance (reduce + (first intersection_points)))
-                                               smallest_distance
-                                               (reduce + (first intersection_points)))))))
+      (recur (rest intersection_points) 
+             (first intersection_points) 
+             (if (< smallest_distance 
+                    (+ (Math/abs (- 0 (first intersect))) (Math/abs (- 0 (second intersect)))))
+               smallest_distance
+               (+ (Math/abs (- 0 (first intersect))) (Math/abs (- 0 (second intersect)))))))))
 
 (defn -main
   "I call the functions for the Advent of Code"
@@ -255,6 +259,6 @@
   ;                                               (day3_1_get_horizontals (day3_1_coordinate_builder ["U7","R6","D4","L4"]))
   ;                                               (day3_1_get_verticals (day3_1_coordinate_builder ["R8","U5","L5","D3"]))))
   ;(println (into [] (map #(name %) '[U7,R6,D4,L4])))
-  (println (day3_1_manhattan_distance (day3_1_all_intersections_for_both_lines ["R8","U5","L5","D3"] ["U7","R6","D4","L4"])))
-  
+  ;(println (day3_1_manhattan_distance (day3_1_all_intersections_for_both_lines ["R8","U5","L5","D3"] ["U7","R6","D4","L4"])))
+  (println (day3_1_manhattan_distance (day3_1_all_intersections_for_both_lines day3_line1 day3_line2)))
   )
