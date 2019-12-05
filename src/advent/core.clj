@@ -82,7 +82,7 @@
   "I find the noun and verb that produce the desired outcome of 19690720 at index 0 and return them as a vector"
   [intcode]
   (let [number_of_items (count intcode)]
-    (println number_of_items)
+    ;(println number_of_items)
     (loop [noun 0 verb 0]
       ;(println "Noun:" noun "Verb:" verb)
       (let [result (day2_1 (day2_prep intcode noun verb))]
@@ -152,6 +152,90 @@
                (conj vec_of_coords (day3_1_coordinate_vec_builder_x - coordinates next_str))))))))))
 
 
+(defn day3_1_get_horizontals
+  [coordinates]
+  (loop [start (first coordinates)
+         rest_coords (rest coordinates)
+         horizontals []]
+    (if (<= (count rest_coords) 0)
+      horizontals
+      (if 
+       (not= 
+        (- (first start) (first (first rest_coords))) 0)
+          (recur (first rest_coords) (rest rest_coords) (conj horizontals [(first start) (first (first rest_coords)) (second start)]))
+          (recur (first rest_coords) (rest rest_coords) horizontals)
+        ))))
+              
+
+(defn day3_1_get_verticals
+  [coordinates]
+  (loop [start (first coordinates)
+         rest_coords (rest coordinates)
+         verticals []]
+    (if (<= (count rest_coords) 0)
+      verticals
+      (if
+       (not=
+        (- (second start) (second (first rest_coords))) 0)
+        (recur (first rest_coords) (rest rest_coords) (conj verticals [(second start) (second (first rest_coords)) (first start)]))
+        (recur (first rest_coords) (rest rest_coords) verticals)))))
+
+
+(defn day3_1_find_intersection_points
+  [vert_lines horiz_lines]
+  (loop [vert_loop vert_lines
+         horiz_loop horiz_lines
+         ;vert_index 0
+         ;horiz_index 0
+         intersections []]
+    
+    (if (empty? vert_loop)
+      intersections
+      (if (empty? horiz_loop)
+        (recur (rest vert_loop) horiz_lines intersections);(inc vert_index) 0 intersections)
+        (let [vert_coords (first vert_loop)
+              horiz_coords (first horiz_loop)
+              vert_x_axis (nth vert_coords 2)
+              horiz_y_axis (nth horiz_coords 2)
+              vert_y1 (if (> (nth vert_coords 0) (nth vert_coords 1)) (nth vert_coords 1) (nth vert_coords 0))
+              vert_y2 (if (> (nth vert_coords 0) (nth vert_coords 1)) (nth vert_coords 0) (nth vert_coords 1))
+              horiz_x1 (if (> (nth horiz_coords 0) (nth horiz_coords 1)) (nth horiz_coords 1) (nth horiz_coords 0))
+              horiz_x2 (if (> (nth horiz_coords 0) (nth horiz_coords 1)) (nth horiz_coords 0) (nth horiz_coords 1))]
+          ;(println "Vertical:" vert_coords "Vertical x axis:" vert_x_axis "Vertical y1:" vert_y1 "Vertical y2:" vert_y2 "Horizontal:" horiz_coords "Horizontal y axis:" horiz_y_axis "Horizontal x1:" horiz_x1 "Horizontal x2:" horiz_x2)
+          (if 
+           (and
+            (and (> horiz_y_axis vert_y1) (< horiz_y_axis vert_y2))
+            (and (> vert_x_axis horiz_x1) (< vert_x_axis horiz_x2)))
+            (recur vert_loop (rest horiz_loop) (conj intersections [vert_x_axis horiz_y_axis]))
+            (recur vert_loop (rest horiz_loop) intersections)))))))
+
+
+(defn day3_1_all_intersections_for_both_lines
+ [line_1 line_2]
+ (let [line_1_coordinates (day3_1_coordinate_builder line_1)
+       line_2_coordinates (day3_1_coordinate_builder line_2)
+       line_1_horizontals (day3_1_get_horizontals line_1_coordinates)
+       line_1_verticals (day3_1_get_verticals line_1_coordinates)
+       line_2_horizontals (day3_1_get_horizontals line_2_coordinates)
+       line_2_verticals (day3_1_get_verticals line_2_coordinates)
+       l1v_intersect_l2h (day3_1_find_intersection_points line_1_verticals line_2_horizontals)
+       l2v_intersect_l1h (day3_1_find_intersection_points line_2_verticals line_1_horizontals)]
+   (loop [intersect_main l1v_intersect_l2h
+          intersect_source l2v_intersect_l1h]
+     (if (empty? intersect_source)
+       intersect_main
+       (recur (into intersect_main intersect_source) (rest intersect_source))))))
+
+(defn day3_1_manhattan_distance
+  [intersection_points]
+  (loop [intersection_points intersection_points
+         smallest_distance (reduce + (first intersection_points))]
+    (if (empty? intersection_points)
+      smallest_distance
+      (recur (rest intersection_points) (if (< smallest_distance (reduce + (first intersection_points)))
+                                               smallest_distance
+                                               (reduce + (first intersection_points)))))))
+
 (defn -main
   "I call the functions for the Advent of Code"
   []
@@ -161,5 +245,16 @@
   (println "Day 2.2 - Noun/verb:" (day2_2_result (day2_2_nounverb day2_intcode)))
   ;(println (map #(if (str/starts-with? % "R") % nil) ["R8","U5","L5","D3"]))
   ;(println (map day3_1_coordinate_changes ["R8","U5","L5","D3"]))
-  (println (day3_1_coordinate_builder ["R8","U5","L5","D3"]))
+  ;(println "Day 3.1 - Coordinate Builder" (day3_1_coordinate_builder ["R8","U5","L5","D3"]))
+  ;(println "Day 3.1 - Find Horizontal Lines" (day3_1_get_horizontals (day3_1_coordinate_builder ["R8","U5","L5","D3"])))
+  ;(println "Day 3.1 - Find Vertical Lines" (day3_1_get_verticals (day3_1_coordinate_builder ["R8","U5","L5","D3"])))
+  ;(println "Day 3.1 - Find intersection points" (day3_1_find_intersection_points 
+  ;                                               (day3_1_get_verticals (day3_1_coordinate_builder ["U7","R6","D4","L4"]))
+  ;                                               (day3_1_get_horizontals (day3_1_coordinate_builder ["R8","U5","L5","D3"]))))
+  ;(println "Day 3.1 - Find intersection points" (day3_1_find_intersection_points
+  ;                                               (day3_1_get_horizontals (day3_1_coordinate_builder ["U7","R6","D4","L4"]))
+  ;                                               (day3_1_get_verticals (day3_1_coordinate_builder ["R8","U5","L5","D3"]))))
+  ;(println (into [] (map #(name %) '[U7,R6,D4,L4])))
+  (println (day3_1_manhattan_distance (day3_1_all_intersections_for_both_lines ["R8","U5","L5","D3"] ["U7","R6","D4","L4"])))
+  
   )
