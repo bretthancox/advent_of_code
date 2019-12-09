@@ -1,90 +1,9 @@
 (ns advent.core
   (:gen-class)
   (:require [clojure.string :as str]
-            [advent.inputs :refer [day1_masses day2_intcode day3_line1 day3_line2]]))
-
-;; ----------- Day 1 -----------
-
-(defn day1_fuel_calc
-  "I do the fuel calculation as defined for day 1"
-  [mass]
-  (- (int (Math/floor (/ mass 3))) 2))
-
-(defn day1_1
-  "I take the mass vector and produce a single fuel requirement"
-  [mass_vec]
-  (reduce + (map day1_fuel_calc mass_vec)))
-
-(defn day1_2
-  "I take the individual masses for each item, work out the fuel requirement for each item, and then recursively calculate the fuel requirement for the fuel"
-  [mass]
-  (loop [fuel_needed (day1_fuel_calc mass)
-         total_fuel 0]
-    (if (< fuel_needed 0)
-      total_fuel
-      (recur (day1_fuel_calc fuel_needed) (+ total_fuel fuel_needed)))))
-
-
-;; ----------- Day 2.1 -----------
-
-(defn day2_operator
-  "Extracts repeated operations from other code"
-  [int1 int2 operator]
-  (operator int1 int2))
-
-(defn day2_prep
-  "Performs the preparation task of replacing the 'noun' and 'verb' per the 2.2 description (aka index 1 and index 2) with new values"
-  [no_alarm noun verb]
-  (assoc (assoc no_alarm 1 noun) 2 verb))
-
-(defn day2_1
-  [intcode]
-  (loop [posa 0
-         posb 1 
-         posc 2 
-         posd 3         
-         intcode intcode]
-    (let [opcode (get intcode posa)]
-      (cond
-        (= opcode 99) intcode
-        (= opcode 1) (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4)
-                            (assoc intcode (get intcode posd) (day2_operator 
-                                                               (get intcode (get intcode posb)) 
-                                                               (get intcode (get intcode posc)) 
-                                                               +)))
-        (= opcode 2) (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4)
-                            (assoc intcode (get intcode posd) (day2_operator 
-                                                               (get intcode (get intcode posb)) 
-                                                               (get intcode (get intcode posc)) 
-                                                               *)))
-        :else (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4) intcode)))))
-
-;; ----------- Day 2.2 -----------
-
-
-(defn day2_2_nounverb
-  "I find the noun and verb that produce the desired outcome of 19690720 at index 0 and return them as a vector"
-  [intcode max desired_result] 
-    (loop [noun 0 verb 0]
-      (let [result (day2_1 (day2_prep intcode noun verb))]
-        (if (= (get result 0) desired_result)
-          [(get result 1) (get result 2)]
-          (recur 
-           (if (= verb (- max 1)) 
-             (inc noun) ;Noun only iterates every full cycle of verb, otherwise it loops without change
-             noun)
-           (if (= verb (- max 1)) 
-             0 ;If a full verb cycle has occurred, reset to 0, otherwise increment
-             (inc verb)))
-          ))))
-
-
-(defn day2_2_result
-  "I use the noun and verb vector to perform the calculation that produces the final answer for day 2.2"
-  [nounverb]
-  (+ (* 100 (get nounverb 0)) (get nounverb 1)))
-
-
+            [advent.day1 :refer :all]
+            [advent.day2 :refer :all]
+            [advent.inputs :refer :all]))
 
 ;; ----------- Day 3.1 -----------
 
@@ -171,7 +90,7 @@ Run again with vertical sub-lines from line A and horizontal sub-lines from line
          intersections []]
     (if (empty? vert_loop)
       intersections
-      (if (empty? horiz_loop) ;; ...we can reuse the original vector as passed to the function
+      (if (empty? horiz_loop) ;; ...we can reuse the original vector as passed to the function even if we empty out the copy
         (recur (rest vert_loop) horiz_lines intersections) 
         (let [vert_coords (first vert_loop)
               horiz_coords (first horiz_loop)
@@ -179,8 +98,8 @@ Run again with vertical sub-lines from line A and horizontal sub-lines from line
               horiz_y_axis (nth horiz_coords 2)
               ;; A little cheat. The end of a line can have a smaller number than the start
               ;; and catching this situation with code is painful. So I guarantee that the smallest
-              ;; x or y value is x1/y1 and the largest is x2/y2. Since the direction of the line
-              ;; is irrelevant to determining intersects, this is not a problem.
+              ;; x or y value is x1 or y1 and the largest is x2 or y2, simplifying subsequent math.
+              ;; Since the direction of the line is irrelevant to determining intersects, this is not a problem.
               vert_y1 (if (> (nth vert_coords 0) (nth vert_coords 1)) (nth vert_coords 1) (nth vert_coords 0))
               vert_y2 (if (> (nth vert_coords 0) (nth vert_coords 1)) (nth vert_coords 0) (nth vert_coords 1))
               horiz_x1 (if (> (nth horiz_coords 0) (nth horiz_coords 1)) (nth horiz_coords 1) (nth horiz_coords 0))
@@ -227,13 +146,92 @@ that distance to the last recorded distance and, if smaller, store that distance
                smallest_distance
                (+ (Math/abs (- 0 (first intersect))) (Math/abs (- 0 (second intersect)))))))))
 
+
+;; ----------- Day 3.2 -----------
+
+(defn crossproduct
+  [point1 point2 testpoint]
+  (let [part1 (- (second testpoint) (second point1))
+        part2 (- (first point2) (first point1))
+        part3 (- (first testpoint) (first point1))
+        part4 (- (second point2) (second point1))
+        crossprd (- (* part1 part2) (* part3 part4))]
+    (if (= crossprd 0)
+      true
+      false)))
+
+(defn day3_2_crossproduct_output
+  [intersection line_coordinates]
+  (loop [line_coordinates line_coordinates
+         line_start (first line_coordinates)
+         line_end (second line_coordinates)
+         coordinates_to_intersect [line_start]
+         is_intersected (crossproduct line_start line_end intersection)]
+    ;(println (conj coordinates_to_intersect intersection))
+    (if (true? is_intersected)
+      (conj coordinates_to_intersect intersection)
+      (recur 
+       (rest line_coordinates) 
+       line_end
+       (second (rest line_coordinates)) 
+       (conj coordinates_to_intersect line_end)
+       (crossproduct line_end (second (rest line_coordinates)) intersection))
+      )
+    )
+    )
+
+(defn sum_the_distance 
+  [coords_to_intersect]
+(loop [coords_to_intersect coords_to_intersect
+       point1 (first coords_to_intersect)
+       point2 (second coords_to_intersect)
+       total 0]
+  ;(println (map - point2 point1))
+  (if (= (count coords_to_intersect) 1)
+    total
+    (recur 
+     (rest coords_to_intersect)
+     point2
+     (second (rest coords_to_intersect))
+     (+ total (reduce + (map #(Math/abs %) (map - point2 point1))))))))
+
+(defn day3_2_loop_intersects
+  [line1 line2]
+  (let [line1_coords (day3_1_coordinate_builder line1)
+        line2_coords (day3_1_coordinate_builder line2)
+        intersections (day3_1_all_intersections_for_both_lines line1 line2)
+        distances []]
+    (loop [intersections intersections
+           line1_intersection_coords (day3_2_crossproduct_output (first intersections) line1_coords)
+           line2_intersection_coords (day3_2_crossproduct_output (first intersections) line2_coords)
+           distances distances]
+      (println (count intersections) (count distances))
+      (if (= 1 (count intersections))
+        (first (sort distances))
+        (recur 
+         (rest intersections)
+         (day3_2_crossproduct_output (first (rest intersections)) line1_coords)
+         (day3_2_crossproduct_output (first (rest intersections)) line2_coords)
+         (conj distances (+ (sum_the_distance line1_intersection_coords) (sum_the_distance line2_intersection_coords))))))))
+  
+
 (defn -main
-  "I call the functions for the Advent of Code"
-  []
-  (println "Day 1.1 - Module masses only:" (day1_1 day1_masses))
-  (println "Day 1.2 - Fuel for the fuel:" (reduce + (map day1_2 day1_masses)))
-  (println "Day 2.1 - Intcode output: " (day2_1 (day2_prep day2_intcode 12 2)))
-  (println "Day 2.2 - Noun/verb:" (day2_2_result (day2_2_nounverb day2_intcode 99 19690720)))
-  ;(println "Day 3.1 - Manhattan distance:" (day3_1_manhattan_distance (day3_1_all_intersections_for_both_lines day3_line1 day3_line2)))
-  (println "Day 3.1 - Manhattan distance:" (day3_1_manhattan_distance day3_line1 day3_line2))
-  )
+  "I call the functions for the Advent of Code on the basis of which day(s) are added as arguments to the command line call"
+  [& days]
+  (loop [days days
+         day (first days)]
+    (if (empty? days)
+      nil
+      (do
+        (cond (= day "1") (do
+                            (println "Day 1.1 - Module masses only:" (day1_1 day1_masses))
+                            (println "Day 1.2 - Fuel for the fuel:" (reduce + (map day1_2 day1_masses))))
+              (= day "2") (do 
+                            (println "Day 2.1 - Intcode output: " (day2_1 (day2_prep day2_intcode 12 2)))
+                            (println "Day 2.2 - Noun/verb:" (day2_2_result (day2_2_nounverb day2_intcode 99 19690720))))
+              (= day "3") (do 
+                            (println "Day 3.1 - Manhattan distance:" (day3_1_manhattan_distance day3_line1 day3_line2))
+                            (println "Day 3.2 - Shortest route to intersect:" (day3_2_loop_intersects day3_line1 day3_line2)))
+              :else (println "Day not completed yet"))
+        (recur (rest days) (first (rest days))))))
+        )
