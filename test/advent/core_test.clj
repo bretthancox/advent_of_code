@@ -1,89 +1,41 @@
 (ns advent.core-test
   (:require [clojure.test :refer :all]
-            [advent.core :refer :all]
-            [advent.day2 :refer :all]))
+            [advent.core :refer :all]))
 
-(deftest day2_1_computer_test
-  (testing "Day 2.1"
-    (is (= (day2_1 [1,0,0,0,99]) [2,0,0,0,99]))
-    (is (= (day2_1 [2,3,0,3,99]) [2,3,0,6,99]))
-    (is (= (day2_1 [2,4,4,5,99,0]) [2,4,4,5,99,9801]))
-    (is (= (day2_1 [1,1,1,4,99,5,6,0,99]) [30,1,1,4,2,5,6,0,99]))
-    ))
 
-(deftest day2_1_alarm_prep_test
-  (testing "Day 2.1 alarm prep"
-    (is (= (day2_prep [1,0,0,0,99] 12 2) [1 12 2 0 99]))
-    (is (= (day2_prep [1,1,1,4,99,5,6,0,99] 12 2) [1,12,2,4,99,5,6,0,99]))
-    ))
+(deftest day4_order_equal_inc
+  (testing "Confirming that the check for equal or incrementing order returns the correct result"
+    (is (true? (check_equal_incrementing_order [1 2 2 4 5])))
+    (is (false? (check_equal_incrementing_order [1 2 2 1 5])))))
 
-(deftest day2_2_test
-  (testing "Day 2.1 noun and verb finder"
-    (is (= (day2_2_nounverb [1 5 6 0 99 19690719 1] 99 19690720) [0 5]))
-    (is (= (day2_2_result (day2_2_nounverb [1 5 6 0 99 19690719 1] 99 19690720)) 5))
-    ))
+(deftest day4_check_one_pair_equal
+  (testing "Confirming that checking for one equal pair produces the correct result"
+    (is (true? (check_at_least_one_equal_pair [1 2 2 4 5])))
+    (is (false? (check_at_least_one_equal_pair [1 2 3 4 5])))))
 
-(deftest day3_1_coord_builder
-  (testing "Day 3.1 Building coordinates"
-    (is (= (day3_1_coordinate_builder ["R8","U5","L5","D3"]) [[0 0] [8 0] [8 5] [3 5] [3 2]]))
-    (is (= (day3_1_coordinate_builder ["U7","R6","D4","L4"]) [[0 0] [0 7] [6 7] [6 3] [2 3]]))
-    (is (= (day3_1_coordinate_builder ["U7","R6","D4","L4","L5","D4"]) [[0 0] [0 7] [6 7] [6 3] [2 3] [-3 3] [-3 -1]]))
-    ))
+(deftest day4_check_int_to_string
+  (testing "Does the int get appropriately converted"
+    (is (= (convert_int_to_string 12245) "12245"))
+    (is (= (convert_int_to_string 12345) "12345"))))
 
-(deftest day3_1_horizontal_lines
-  (testing "Day 3.1 Horizontal line definitions [Xstart Xend Y]"
-    (is (= (day3_1_get_horizontals [[0 0] [8 0] [8 5] [3 5] [3 2]]) [[0 8 0] [8 3 5]]))
-    (is (= (day3_1_get_horizontals [[0 0] [0 7] [6 7] [6 3] [2 3]]) [[0 6 7] [6 2 3]]))
-    (is (= (day3_1_get_horizontals [[0 0] [0 7] [6 7] [6 3] [2 3] [-3 3] [-3 -1]]) [[0 6 7] [6 2 3] [2 -3 3]]))
-    ))
+(deftest day4_split_string
+  (testing "Does the string get split correctly"
+    (is (= (make_vec_of_strings "12245") ["1" "2" "2" "4" "5"]))))
 
-(deftest day3_1_vertical_lines
-  (testing "Day 3.1 Vertical line definitions [Ystart Yend X]"
-    (is (= (day3_1_get_verticals [[0 0] [8 0] [8 5] [3 5] [3 2]]) [[0 5 8] [5 2 3]]))
-    (is (= (day3_1_get_verticals [[0 0] [0 7] [6 7] [6 3] [2 3]]) [[0 7 0] [7 3 6]]))
-    (is (= (day3_1_get_verticals [[0 0] [0 7] [6 7] [6 3] [2 3] [-3 3] [-3 -1]]) [[0 7 0] [7 3 6] [3 -1 -3]]))))
+(deftest day4_produce_ints
+  (testing "Do the substrings get converted to integers"
+    (is (= (make_substrings_into_ints ["1" "2" "2" "4" "5"]) [1 2 2 4 5]))))
 
-(deftest day3_1_intersections
-  (testing "Day 3.1 find the intersection coordinates"
-    (is (= (day3_1_find_intersection_points [[0 7 0] [7 3 6]] [[0 8 0] [8 3 5]]) [[6 5]]))
-    (is (= (day3_1_find_intersection_points [[0 5 8] [5 2 3]] [[0 6 7] [6 2 3]]) [[3 3]]))
-    ))
+(deftest day4_ensure_both_checks_are_true
+  (testing "Confirm that when both checks are true, the result is true"
+    (is (true? (check_both_checks_are_true [1 2 2 4 5])))
+    (is (false? (check_both_checks_are_true [1 2 3 4 5])))
+    (is (false? (check_both_checks_are_true [1 2 2 3 2])))))
 
-(deftest day3_1_manhattan_test
-  (testing "Day 3.1 Manhattan distance"
-    (is (= (day3_1_manhattan_distance 
-            (into [] (map #(name %) '[R75,D30,R83,U83,L12,D49,R71,U7,L72])) 
-            (into [] (map #(name %) '[U62,R66,U55,R34,D71,R55,D58,R83])))
-           159))
-    (is (= (day3_1_manhattan_distance 
-            (into [] (map #(name %) '[R8,U5,L5,D3])) 
-            (into [] (map #(name %) '[U7,R6,D4,L4])))
-           6))
-    ))
+(deftest day4_end_to_end_int_to_vecint
+  (testing "Confirm that the end to end process of building the vec of ints works"
+    (is (= (produce_vector_of_ints 12245) [1 2 2 4 5]))))
 
-(deftest day3_2_crossproduct_test
-  (testing "Finding the set of coordinates that terminate in an intersection"
-  (is (= (day3_2_crossproduct_output 
-          (second 
-           (day3_1_all_intersections_for_both_lines 
-            (into [] (map #(name %) '[R8,U5,L5,D3]))
-            (into [] (map #(name %) '[U7,R6,D4,L4]))))
-          (day3_1_coordinate_builder (into [] (map #(name %) '[R8,U5,L5,D3]))))
-         [[0 0] [8 0] [8 5] [6 5]]
-         ))))
-
-(deftest sum_the_distance_test
-  (testing "Summing the distance"
-    (is (= (sum_the_distance [[0 0] [8 0] [8 5] [6 5]]) 15))
-    (is (= (sum_the_distance [[0 0] [0 7] [6 7] [6 5]]) 15))))
-
-(deftest day3_2_loop_intersects_test
-  (testing "day3_2_loop_intersects"
-    (is (= (day3_2_loop_intersects
-            (into [] (map #(name %) '[R75,D30,R83,U83,L12,D49,R71,U7,L72]))
-            (into [] (map #(name %) '[U62,R66,U55,R34,D71,R55,D58,R83])))
-           610)
-        (= (day3_2_loop_intersects
-            (into [] (map #(name %) '[R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51]))
-            (into [] (map #(name %) '[U98,R91,D20,R16,D67,R40,U7,R15,U6,R7])))
-           410))))
+(deftest day4_test
+  (testing "Confirm the results are correct"
+    (is (= (day4_2_command_and_control 12242 12248) 5))))
