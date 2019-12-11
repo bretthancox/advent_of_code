@@ -36,6 +36,18 @@
   (testing "Confirm that the end to end process of building the vec of ints works"
     (is (= (produce_vector_of_ints 12245) [1 2 2 4 5]))))
 
-(deftest day4_test
+(deftest day4_1_test
   (testing "Confirm the results are correct"
-    (is (= (day4_2_command_and_control 12242 12248) 5))))
+    (is (= (day4_1_command_and_control 122342 122348) 5))
+    (is (= (day4_1_command_and_control 112224 112233) 7))))
+
+
+(deftest day4_2_logic_check
+  (testing "Checking the logic of picking a password with only two neighboring values"
+    (is (true? (check_if_more_than_two_identical_values_neighboring [1 2 2 4 5])))
+    (is (false? (check_if_more_than_two_identical_values_neighboring [1 2 2 2 5])))))
+
+(deftest day4_2_test
+  (testing "Confirm the results are correct"
+    (is (= (day4_2_command_and_control 122342 122348) 5))
+    (is (= (day4_2_command_and_control 112224 112233) 7))))
