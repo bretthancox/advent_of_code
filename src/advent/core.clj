@@ -8,25 +8,7 @@
             [advent.inputs :refer :all]))
 
 
-;; ----------- Day 5.1 -----------
-
-;; Intcode changes for Day 5:
-  ;; 1. The first code can now be up to 5 digits long instead of being 1, 2, or 99
-    ;; a. The code is now divided into ADBCDE:
-      ;; i. DE is the (now two digit) opcode (where D is only guaranteed to be present if the following parameter modes are specified)
-      ;; ii. C is the mode to be applied to the first parameter
-      ;; iii. B is the mode to be applied to the second parameter
-      ;; iv. A is the mode to be applied third parameter
-      ;; v. If A, B, or C are absent, assume they are 0
-      ;; vi. If a mode is 0, the code behaves as per Day 2. If 1 is present, the associated parameter is not a pointer; it is the actual value
-    ;; b. Opcode can now be:
-      ;; i. 99 == halt
-      ;; ii. 01 == sum 
-      ;; iii. 02 == multiply 
-      ;; iv. 3 == take a single integer input as its only parameter, so E is the instruction, D(C, B, A) is the integer to save it to first parameter location
-      ;; v. 4 == output the value at first parameter location
-  ;; 2. Intcode can now be 4 indices (for opcode 01, 02), 1 index (99), or 2 indices (3, 4), so the opcode also defines the step to take for the next intcode set
-  ;; 3. An input function is needed that turns human-entered values into integers
+;; ----------- Day 5 -----------
 
 (defn user_input_to_int
   "I turn a human-entered value into an integer"
@@ -79,7 +61,65 @@
             operator))))
 
 
-(defn day5_1_opcode
+(defn opcode_5
+  [intcode posa posb posc opcode_details]
+   (let [par1 (if (= (:par1_mode opcode_details) 0) 
+                (get intcode (get intcode posb))
+                (get intcode posb))
+         par2 (if (= (:par2_mode opcode_details) 0)
+                (get intcode (get intcode posc))
+                (get intcode posc))]
+     (if (zero? par1)
+       (+ posa 3)
+       par2)))
+
+
+(defn opcode_6
+  [intcode posa posb posc opcode_details]
+  (let [par1 (if (= (:par1_mode opcode_details) 0)
+               (get intcode (get intcode posb))
+               (get intcode posb))
+        par2 (if (= (:par2_mode opcode_details) 0)
+               (get intcode (get intcode posc))
+               (get intcode posc))]
+    (if (zero? par1)
+      par2
+      (+ posa 3))))
+
+
+(defn opcode_7
+  [intcode posa posb posc posd opcode_details]
+  (let [par1 (if (= (:par1_mode opcode_details) 0)
+               (get intcode (get intcode posb))
+               (get intcode posb))
+        par2 (if (= (:par2_mode opcode_details) 0)
+               (get intcode (get intcode posc))
+               (get intcode posc))
+        par3 (if (= (:par3_mode opcode_details) 0)
+               (get intcode posd)
+               posd)]
+    (if (< par1 par2)
+      (assoc intcode par3 1)
+      (assoc intcode par3 0))))
+
+
+(defn opcode_8
+  [intcode posa posb posc posd opcode_details]
+  (let [par1 (if (= (:par1_mode opcode_details) 0)
+               (get intcode (get intcode posb))
+               (get intcode posb))
+        par2 (if (= (:par2_mode opcode_details) 0)
+               (get intcode (get intcode posc))
+               (get intcode posc))
+        par3 (if (= (:par3_mode opcode_details) 0)
+               (get intcode posd)
+               posd)]
+    (if (= par1 par2)
+      (assoc intcode par3 1)
+      (assoc intcode par3 0))))
+
+
+(defn day5_opcode
   "I check the opcode and perform the appropriate replacements of items based on the primary rules. Opcode = index 0; Noun = index 1; Verb = index 2; Insert_at = index 3"
   [intcode]
   (loop [posa 0
@@ -100,17 +140,21 @@
                                                      (if (= (:par1_mode opcode_details) 0)
                                                        (get intcode posb)
                                                        posb)
-                                                     (Integer/parseInt (read-line))))
+                                                     (Integer/parseInt (do (print "Input code: ") (flush) (read-line)))))
         (= (:opcode opcode_details) 4) (do
                                          (println "Diagnostic code:" (if (= (:par1_mode opcode_details) 0)
-                                                    (get intcode (get intcode posb))
-                                                    (get intcode posb)))
-                                         ;(println intcode)
+                                                                       (get intcode (get intcode posb))
+                                                                       (get intcode posb)))
                                          (recur (+ posa 2) (+ posb 2) (+ posc 2) (+ posd 2) intcode))
+        (= (:opcode opcode_details) 5) (let [new_posa (opcode_5 intcode posa posb posc opcode_details)]
+                                         (recur new_posa (+ new_posa 1) (+ new_posa 2) (+ new_posa 3) intcode))
+        (= (:opcode opcode_details) 6) (let [new_posa (opcode_6 intcode posa posb posc opcode_details)]
+                                         (recur new_posa (+ new_posa 1) (+ new_posa 2) (+ new_posa 3) intcode))
+        (= (:opcode opcode_details) 7) (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4)
+                                              (opcode_7 intcode posa posb posc posd opcode_details))  ;; intcode posa posb posc posd opcode_details
+        (= (:opcode opcode_details) 8) (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4)
+                                              (opcode_8 intcode posa posb posc posd opcode_details))
         :else (recur (+ posa 4) (+ posb 4) (+ posc 4) (+ posd 4) intcode)))))
-
-
-;; ----------- Day 5.2 -----------
 
 
 (defn -main
@@ -133,9 +177,6 @@
               (= day "4") (do
                             (println "Day 4.1 - Number of combinations:" (day4_1_command_and_control day4_start day4_end))
                             (println "Day 4.2 - No more than two identical neighboring values:" (day4_2_command_and_control day4_start day4_end)))
-              (= day "5") (do
-                            (println "Day 5.1 - A/C Intcode:") (day5_1_opcode day5_intcode)
-                            (println "Day 5.2 - Not done"))
+              (= day "5") (day5_opcode day5_intcode)
               :else (println "Day not completed yet"))
-        (recur (rest days) (first (rest days))))))
-        )
+        (recur (rest days) (first (rest days)))))))
